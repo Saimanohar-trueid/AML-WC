@@ -1,0 +1,1452 @@
+package com.trueid.aml.nmatch.export;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+
+import com.opencsv.CSVWriter;
+import com.trueid.aml.nmatch.data.MatchedData;
+import com.trueid.aml.nmatch.data.PosidexData;
+import com.trueid.aml.nmatch.data.PythonJaroData;
+import com.trueid.aml.nmatch.data.PythonLevenData;
+import com.trueid.aml.nmatch.data.PythonQratioData;
+import com.trueid.aml.nmatch.data.PythonSetRatioData;
+import com.trueid.aml.nmatch.data.PythonSortRationData;
+import com.trueid.aml.nmatch.data.RosetteData;
+
+import lombok.Data;
+
+public class MatchingResultsExporter {
+
+	/*
+	 * public List<String[]> dataProcess(List<RosetteData> rData, List<PosidexData>
+	 * pData, List<PythonJaroData> pJaroData, List<PythonLevenData> pLevenData,
+	 * List<PythonQratioData> pQrData, HashMap<Long, ColumnData> colDataMap,
+	 * ArrayList<DataRank> dataOrder, String name) {
+	 */
+	/*
+	 * if (rData != null) { for (RosetteData r : rData) { DataRank dRank = new
+	 * DataRank(r.getUid(), r.getScore()); dataOrder.add(dRank); ColumnData cData =
+	 * new ColumnData(); cData.rData = r; colDataMap.put(r.getUid(), cData); } }
+	 */
+	public String[] rosette(List<RosetteData> rData, HashMap<Long, ColumnData> colDataMap,
+			ArrayList<DataRank> dataOrder, String name) {
+		if (rData != null) {
+			for (RosetteData p : rData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.rData = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its
+				cData = new ColumnData();
+				cData.rData = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+		Collections.sort(dataOrder, new Comparator<DataRank>() {
+
+			@Override
+			public int compare(DataRank o1, DataRank o2) {
+
+				if (o1.getScore() - o2.getScore() > 0) {
+					return -1;
+				} else
+					return 1;
+
+			}
+
+		});
+
+		String rosetteRow = printRow(dataOrder, colDataMap, "ROSETTE");
+
+		rosetteRow = "ROSETTE," + name + "," + rosetteRow;
+		String[] arrayRosette = rosetteRow.split(",");
+		return arrayRosette;
+	}
+
+	public String[] posidex(List<PosidexData> pData, HashMap<Long, ColumnData> colDataMap,
+			ArrayList<DataRank> dataOrder, String name) {
+
+		if (pData != null) {
+			for (PosidexData p : pData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pData = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its
+				cData = new ColumnData();
+				cData.pData = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+		Collections.sort(dataOrder, new Comparator<DataRank>() {
+
+			@Override
+			public int compare(DataRank o1, DataRank o2) {
+
+				if (o1.getScore() - o2.getScore() > 0) {
+					return -1;
+				} else
+					return 1;
+
+			}
+
+		});
+
+		String posidexRow = printRow(dataOrder, colDataMap, "POSIDEX");
+		posidexRow = "POSIDEX," + name + "," + posidexRow;
+		String[] arrayPosidex = posidexRow.split(",");
+
+		return arrayPosidex;
+	}
+
+	public String[] jaro(List<PythonJaroData> pJaroData, HashMap<Long, ColumnData> colDataMap,
+			ArrayList<DataRank> dataOrder, String name) {
+
+		if (pJaroData != null) {
+			for (PythonJaroData p : pJaroData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pJaro = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pJaro = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+		Collections.sort(dataOrder, new Comparator<DataRank>() {
+
+			@Override
+			public int compare(DataRank o1, DataRank o2) {
+
+				if (o1.getScore() - o2.getScore() > 0) {
+					return -1;
+				} else
+					return 1;
+
+			}
+
+		});
+
+		String jaroRow = printRow(dataOrder, colDataMap, "JARO");
+		jaroRow = "JARO," + name + "," + jaroRow;
+		String[] arrayJaro = jaroRow.split(",");
+
+		return arrayJaro;
+	}
+
+	public String[] leven(List<PythonLevenData> pLevenData, HashMap<Long, ColumnData> colDataMap,
+			ArrayList<DataRank> dataOrder, String name) {
+
+		if (pLevenData != null) {
+			for (PythonLevenData p : pLevenData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pLenen = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pLenen = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+		Collections.sort(dataOrder, new Comparator<DataRank>() {
+
+			@Override
+			public int compare(DataRank o1, DataRank o2) {
+
+				if (o1.getScore() - o2.getScore() > 0) {
+					return -1;
+				} else
+					return 1;
+
+			}
+
+		});
+
+		String levenRow = printRow(dataOrder, colDataMap, "LEVENSHTEIN");
+
+		levenRow = "LEVENSHTEIN," + name + "," + levenRow;
+		String[] arrayLeven = levenRow.split(",");
+
+		return arrayLeven;
+	}
+
+	public String[] qRatio(List<PythonQratioData> pQrData, HashMap<Long, ColumnData> colDataMap,
+			ArrayList<DataRank> dataOrder, String name) {
+
+		if (pQrData != null) {
+			for (PythonQratioData p : pQrData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pQr = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pQr = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+		Collections.sort(dataOrder, new Comparator<DataRank>() {
+
+			@Override
+			public int compare(DataRank o1, DataRank o2) {
+
+				if (o1.getScore() - o2.getScore() > 0) {
+					return -1;
+				} else
+					return 1;
+
+			}
+
+		});
+
+		String qRationRow = printRow(dataOrder, colDataMap, "QRATIO");
+		qRationRow = "QRATIO," + name + "," + qRationRow;
+		String[] arrayQratio = qRationRow.split(",");
+		return arrayQratio;
+	}
+
+	// return listData;
+
+	public List<String[]> rosetteDataProcess(List<RosetteData> rData, List<PosidexData> pData,
+			List<PythonJaroData> pJaroData, List<PythonLevenData> pLevenData, List<PythonQratioData> pQrData,
+			HashMap<Long, ColumnData> colDataMap, ArrayList<DataRank> dataOrder, String name) {
+
+		/*
+		 * if (rData != null) { for (RosetteData r : rData) { DataRank dRank = new
+		 * DataRank(r.getUid(), r.getScore()); dataOrder.add(dRank); ColumnData cData =
+		 * new ColumnData(); cData.rData = r; colDataMap.put(r.getUid(), cData);
+		 * //System.out.println("Rosette "+r.toString()); } }
+		 */
+
+		if (rData != null) {
+			for (RosetteData p : rData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.rData = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its
+				cData = new ColumnData();
+				cData.rData = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pData != null) {
+			for (PosidexData p : pData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pData = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its
+				cData = new ColumnData();
+				cData.pData = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pJaroData != null) {
+			for (PythonJaroData p : pJaroData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pJaro = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pJaro = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pLevenData != null) {
+			for (PythonLevenData p : pLevenData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pLenen = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pLenen = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pQrData != null) {
+			for (PythonQratioData p : pQrData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pQr = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pQr = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		Collections.sort(rData, new Comparator<RosetteData>() {
+
+			@Override
+			public int compare(RosetteData o1, RosetteData o2) {
+
+				if (o1.getScore() - o2.getScore() > 0) {
+					return -1;
+				} else
+					return 1;
+
+			}
+
+		});
+
+		List<String[]> listData = setDataRosette(rData, colDataMap, name);
+
+		return listData;
+
+	}
+
+	public List<String[]> posidexDataProcess(List<RosetteData> rData, List<PosidexData> pData,
+			List<PythonJaroData> pJaroData, List<PythonLevenData> pLevenData, List<PythonQratioData> pQrData,
+			HashMap<Long, ColumnData> colDataMap, ArrayList<DataRank> dataOrder, String name) {
+
+		/*
+		 * if (pData != null) { for (PosidexData r : pData) { DataRank dRank = new
+		 * DataRank(r.getUid(), r.getScore()); dataOrder.add(dRank); ColumnData cData =
+		 * new ColumnData(); cData.pData = r; colDataMap.put(r.getUid(), cData); } }
+		 */
+
+		if (pData != null) {
+			for (PosidexData p : pData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pData = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its
+				cData = new ColumnData();
+				cData.pData = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (rData != null) {
+			for (RosetteData p : rData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.rData = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its
+				cData = new ColumnData();
+				cData.rData = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pJaroData != null) {
+			for (PythonJaroData p : pJaroData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pJaro = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pJaro = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pLevenData != null) {
+			for (PythonLevenData p : pLevenData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pLenen = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pLenen = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pQrData != null) {
+			for (PythonQratioData p : pQrData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pQr = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pQr = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		Collections.sort(pData, new Comparator<PosidexData>() {
+
+			@Override
+			public int compare(PosidexData o1, PosidexData o2) {
+
+				if (o1.getScore() - o2.getScore() > 0) {
+					return -1;
+				} else
+					return 1;
+
+			}
+
+		});
+
+		List<String[]> listData = setData(pData, colDataMap, name);
+
+		return listData;
+
+	}
+
+	public List<String[]> jaroDataProcess(List<RosetteData> rData, List<PosidexData> pData,
+			List<PythonJaroData> pJaroData, List<PythonLevenData> pLevenData, List<PythonQratioData> pQrData,
+			HashMap<Long, ColumnData> colDataMap, ArrayList<DataRank> dataOrder, String name) {
+
+		/*
+		 * if (pJaroData != null) { for (PythonJaroData r : pJaroData) { DataRank dRank
+		 * = new DataRank(r.getUid(), r.getScore()); dataOrder.add(dRank); ColumnData
+		 * cData = new ColumnData(); cData.pJaro = r; colDataMap.put(r.getUid(), cData);
+		 * } }
+		 */
+
+		if (pJaroData != null) {
+			for (PythonJaroData p : pJaroData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pJaro = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its
+				cData = new ColumnData();
+				cData.pJaro = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (rData != null) {
+			for (RosetteData p : rData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.rData = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its
+				cData = new ColumnData();
+				cData.rData = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pData != null) {
+			for (PosidexData p : pData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pData = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pData = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pLevenData != null) {
+			for (PythonLevenData p : pLevenData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pLenen = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pLenen = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pQrData != null) {
+			for (PythonQratioData p : pQrData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pQr = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pQr = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		Collections.sort(pJaroData, new Comparator<PythonJaroData>() {
+
+			@Override
+			public int compare(PythonJaroData o1, PythonJaroData o2) {
+
+				if (o1.getScore() - o2.getScore() > 0) {
+					return -1;
+				} else
+					return 1;
+
+			}
+
+		});
+
+		List<String[]> listData = setDataJaro(pJaroData, colDataMap, name);
+
+		return listData;
+	}
+
+	public List<String[]> levenDataProcess(List<RosetteData> rData, List<PosidexData> pData,
+			List<PythonJaroData> pJaroData, List<PythonLevenData> pLevenData, List<PythonQratioData> pQrData,
+			HashMap<Long, ColumnData> colDataMap, ArrayList<DataRank> dataOrder, String name) {
+
+		/*
+		 * if (pLevenData != null) { for (PythonLevenData r : pLevenData) { DataRank
+		 * dRank = new DataRank(r.getUid(), r.getScore()); dataOrder.add(dRank);
+		 * ColumnData cData = new ColumnData(); cData.pLenen = r;
+		 * colDataMap.put(r.getUid(), cData); } }
+		 */
+
+		if (pLevenData != null) {
+			for (PythonLevenData p : pLevenData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pLenen = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its
+				cData = new ColumnData();
+				cData.pLenen = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (rData != null) {
+			for (RosetteData p : rData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.rData = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its
+				cData = new ColumnData();
+				cData.rData = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pData != null) {
+			for (PosidexData p : pData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pData = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pData = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pJaroData != null) {
+			for (PythonJaroData p : pJaroData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pJaro = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pJaro = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pQrData != null) {
+			for (PythonQratioData p : pQrData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pQr = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pQr = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		Collections.sort(pLevenData, new Comparator<PythonLevenData>() {
+
+			@Override
+			public int compare(PythonLevenData o1, PythonLevenData o2) {
+
+				if (o1.getScore() - o2.getScore() > 0) {
+					return -1;
+				} else
+					return 1;
+
+			}
+
+		});
+
+		List<String[]> listData = setDataLeven(pLevenData, colDataMap, name);
+
+		return listData;
+	}
+
+	public List<String[]> qRatioDataProcess(List<RosetteData> rData, List<PosidexData> pData,
+			List<PythonJaroData> pJaroData, List<PythonLevenData> pLevenData, List<PythonQratioData> pQrData,
+			HashMap<Long, ColumnData> colDataMap, ArrayList<DataRank> dataOrder, String name) {
+
+		/*
+		 * if (pQrData != null) { for (PythonQratioData r : pQrData) { DataRank dRank =
+		 * new DataRank(r.getUid(), r.getScore()); dataOrder.add(dRank); ColumnData
+		 * cData = new ColumnData(); cData.pQr = r; colDataMap.put(r.getUid(), cData); }
+		 * }
+		 */
+
+		if (pQrData != null) {
+			for (PythonQratioData p : pQrData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pQr = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its
+				cData = new ColumnData();
+				cData.pQr = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (rData != null) {
+			for (RosetteData p : rData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.rData = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its
+				cData = new ColumnData();
+				cData.rData = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pData != null) {
+			for (PosidexData p : pData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pData = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pData = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pJaroData != null) {
+			for (PythonJaroData p : pJaroData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pJaro = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pJaro = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		if (pLevenData != null) {
+			for (PythonLevenData p : pLevenData) {
+				ColumnData cData = colDataMap.get(p.getUid());
+				if (cData != null) {
+					cData.pLenen = p;
+					continue;
+				}
+
+				// if uuid is not found in the map, create new column and add find its position
+				cData = new ColumnData();
+				cData.pLenen = p;
+				colDataMap.put(p.getUid(), cData);
+				DataRank dRank = new DataRank(p.getUid(), p.getScore());
+				dataOrder.add(dRank);
+			}
+		}
+
+		Collections.sort(pQrData, new Comparator<PythonQratioData>() {
+
+			@Override
+			public int compare(PythonQratioData o1, PythonQratioData o2) {
+
+				if (o1.getScore() - o2.getScore() > 0) {
+					return -1;
+				} else
+					return 1;
+
+			}
+
+		});
+
+		List<String[]> listData = setDataQratio(pQrData, colDataMap, name);
+
+		return listData;
+
+	}
+
+	public void export(HashMap dataMap, String requestedName) {
+
+		ArrayList<DataRank> dataOrder = new ArrayList();
+		HashMap<Long, ColumnData> colDataMap = new HashMap<>();
+
+		List listOfArr = new ArrayList();
+
+		List<RosetteData> rData = (List<RosetteData>) dataMap.get("ROSETTE");
+		List<PosidexData> pData = (List<PosidexData>) dataMap.get("POSIDEX");
+		List<PythonJaroData> pJaroData = (List<PythonJaroData>) dataMap.get("JARO");
+		List<PythonLevenData> pLevenData = (List<PythonLevenData>) dataMap.get("LEVENSHTEIN");
+		List<PythonQratioData> pQrData = (List<PythonQratioData>) dataMap.get("QRATIO");
+
+		dataOrder = new ArrayList();
+		colDataMap = new HashMap<>();
+		List<String[]> rosetteData = rosetteDataProcess(rData, pData, pJaroData, pLevenData, pQrData, colDataMap,
+				dataOrder, requestedName);
+
+		dataOrder = new ArrayList();
+		colDataMap = new HashMap<>();
+		List<String[]> psxData = posidexDataProcess(rData, pData, pJaroData, pLevenData, pQrData, colDataMap, dataOrder,
+				requestedName);
+
+		dataOrder = new ArrayList();
+		colDataMap = new HashMap<>();
+		List<String[]> jaroData = jaroDataProcess(rData, pData, pJaroData, pLevenData, pQrData, colDataMap, dataOrder,
+				requestedName);
+
+		dataOrder = new ArrayList();
+		colDataMap = new HashMap<>();
+		List<String[]> levelData = levenDataProcess(rData, pData, pJaroData, pLevenData, pQrData, colDataMap, dataOrder,
+				requestedName);
+
+		dataOrder = new ArrayList();
+		colDataMap = new HashMap<>();
+		List<String[]> qratioData = qRatioDataProcess(rData, pData, pJaroData, pLevenData, pQrData, colDataMap,
+				dataOrder, requestedName);
+
+		dataOrder = new ArrayList();
+		colDataMap = new HashMap<>();
+		String[] rosette = rosette(rData, colDataMap, dataOrder, requestedName);
+
+		dataOrder = new ArrayList();
+		colDataMap = new HashMap<>();
+		String[] posidex = posidex(pData, colDataMap, dataOrder, requestedName);
+
+		dataOrder = new ArrayList();
+		colDataMap = new HashMap<>();
+		String[] jaro = jaro(pJaroData, colDataMap, dataOrder, requestedName);
+
+		dataOrder = new ArrayList();
+		colDataMap = new HashMap<>();
+		String[] leven = leven(pLevenData, colDataMap, dataOrder, requestedName);
+
+		dataOrder = new ArrayList();
+		colDataMap = new HashMap<>();
+		String[] qRatio = qRatio(pQrData, colDataMap, dataOrder, requestedName);
+
+		String[] nullVal = { "" };
+
+		List<String[]> listDefArr = new ArrayList();
+		listDefArr.add(nullVal);
+		listDefArr.add(nullVal);
+		listDefArr.add(rosette);
+		listDefArr.add(posidex);
+		listDefArr.add(jaro);
+		listDefArr.add(leven);
+		listDefArr.add(qRatio);
+
+		List<List<String[]>> listArr = new ArrayList<>();
+
+		listArr.add(rosetteData);
+		listArr.add(psxData);
+		listArr.add(jaroData);
+		listArr.add(levelData);
+		listArr.add(qratioData);
+		listArr.add(listDefArr);
+
+		System.out.println("\nFinal CSV Data  ");
+
+		try {
+			storeDataIntoCSV(listArr, requestedName);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public List<String[]> setDataRosette(List<RosetteData> dataOrder, HashMap<Long, ColumnData> colDataMap,
+			String requestedName) {
+
+		String rosetteRow = printRowRosette(dataOrder, colDataMap, "ROSETTE");
+		String posidexRow = printRowRosette(dataOrder, colDataMap, "POSIDEX");
+		String jaroRow = printRowRosette(dataOrder, colDataMap, "JARO");
+		String levenRow = printRowRosette(dataOrder, colDataMap, "LEVENSHTEIN");
+		String qRationRow = printRowRosette(dataOrder, colDataMap, "QRATIO");
+		String setRatioRow = printRowRosette(dataOrder, colDataMap, "SETRATIO");
+		String sortRationRow = printRowRosette(dataOrder, colDataMap, "SORTRATIO");
+
+		// String fileName = requestedName;
+
+		requestedName = requestedName + ",";
+
+		posidexRow = "POSIDEX," + requestedName + posidexRow;
+		rosetteRow = "ROSETTE," + requestedName + rosetteRow;
+		jaroRow = "JARO," + requestedName + jaroRow;
+		levenRow = "LEVENSHTEIN," + requestedName + levenRow;
+		qRationRow = "QRATIO," + requestedName + qRationRow;
+		setRatioRow = "SETRATIO," + requestedName + setRatioRow;
+		sortRationRow = "SORTRATIO," + requestedName + sortRationRow;
+
+		// System.out.println("rosetteRow Data "+rosetteRow);
+
+		String[] arrayRosette = rosetteRow.split(",");
+		String[] arrayPosidex = posidexRow.split(",");
+		String[] arrayJaro = jaroRow.split(",");
+		String[] arrayLeven = levenRow.split(",");
+		String[] arrayQratio = qRationRow.split(",");
+		// String[] arraySet = setRatioRow.split(",");
+		// String[] arraySort = sortRationRow.split(",");
+
+		String[] columns = { "Algorithm", " Screened Name", " matched data" };
+		String[] emptyVal = { "" };
+
+		List<String[]> listData = new ArrayList<>();
+		// listData.add(arrayRosette);
+		listData.add(columns);
+		listData.add(emptyVal);
+		listData.add(arrayRosette);
+		listData.add(arrayPosidex);
+		listData.add(arrayJaro);
+		listData.add(arrayLeven);
+		listData.add(arrayQratio);
+
+		return listData;
+
+	}
+
+	public List<String[]> setData(List<PosidexData> dataOrder, HashMap<Long, ColumnData> colDataMap,
+			String requestedName) {
+
+		String rosetteRow = printRowPSX(dataOrder, colDataMap, "ROSETTE");
+		String posidexRow = printRowPSX(dataOrder, colDataMap, "POSIDEX");
+		String jaroRow = printRowPSX(dataOrder, colDataMap, "JARO");
+		String levenRow = printRowPSX(dataOrder, colDataMap, "LEVENSHTEIN");
+		String qRationRow = printRowPSX(dataOrder, colDataMap, "QRATIO");
+		String setRatioRow = printRowPSX(dataOrder, colDataMap, "SETRATIO");
+		String sortRationRow = printRowPSX(dataOrder, colDataMap, "SORTRATIO");
+
+		// String fileName = requestedName;
+
+		requestedName = requestedName + ",";
+
+		posidexRow = "POSIDEX," + requestedName + posidexRow;
+		rosetteRow = "ROSETTE," + requestedName + rosetteRow;
+		jaroRow = "JARO," + requestedName + jaroRow;
+		levenRow = "LEVENSHTEIN," + requestedName + levenRow;
+		qRationRow = "QRATIO," + requestedName + qRationRow;
+		setRatioRow = "SETRATIO," + requestedName + setRatioRow;
+		sortRationRow = "SORTRATIO," + requestedName + sortRationRow;
+
+		String[] arrayRosette = rosetteRow.split(",");
+		String[] arrayPosidex = posidexRow.split(",");
+		String[] arrayJaro = jaroRow.split(",");
+		String[] arrayLeven = levenRow.split(",");
+		String[] arrayQratio = qRationRow.split(",");
+		// String[] arraySet = setRatioRow.split(",");
+		// String[] arraySort = sortRationRow.split(",");
+
+		// String[] columns = { "Algorithm", " Screened Name", " matched data" };
+		String[] emptyVal = { "" };
+
+		List<String[]> listData = new ArrayList<>();
+		//
+		// listData.add(columns);
+		listData.add(emptyVal);
+		listData.add(arrayPosidex);
+		listData.add(arrayRosette);
+		listData.add(arrayJaro);
+		listData.add(arrayLeven);
+		listData.add(arrayQratio);
+
+		return listData;
+
+	}
+
+	public List<String[]> setDataDef(ArrayList<DataRank> dataOrder, HashMap<Long, ColumnData> colDataMap,
+			String requestedName) {
+
+		String rosetteRow = printRow(dataOrder, colDataMap, "ROSETTE");
+		String posidexRow = printRow(dataOrder, colDataMap, "POSIDEX");
+		String jaroRow = printRow(dataOrder, colDataMap, "JARO");
+		String levenRow = printRow(dataOrder, colDataMap, "LEVENSHTEIN");
+		String qRationRow = printRow(dataOrder, colDataMap, "QRATIO");
+		String setRatioRow = printRow(dataOrder, colDataMap, "SETRATIO");
+		String sortRationRow = printRow(dataOrder, colDataMap, "SORTRATIO");
+
+		// String fileName = requestedName;
+
+		requestedName = requestedName + ",";
+
+		posidexRow = "POSIDEX," + requestedName + posidexRow;
+		rosetteRow = "ROSETTE," + requestedName + rosetteRow;
+		jaroRow = "JARO," + requestedName + jaroRow;
+		levenRow = "LEVENSHTEIN," + requestedName + levenRow;
+		qRationRow = "QRATIO," + requestedName + qRationRow;
+		setRatioRow = "SETRATIO," + requestedName + setRatioRow;
+		sortRationRow = "SORTRATIO," + requestedName + sortRationRow;
+
+		String[] arrayRosette = rosetteRow.split(",");
+		String[] arrayPosidex = posidexRow.split(",");
+		String[] arrayJaro = jaroRow.split(",");
+		String[] arrayLeven = levenRow.split(",");
+		String[] arrayQratio = qRationRow.split(",");
+		// String[] arraySet = setRatioRow.split(",");
+		// String[] arraySort = sortRationRow.split(",");
+
+		String[] emptyVal = { "" };
+
+		List<String[]> listData = new ArrayList<>();
+		// listData.add(arrayRosette);
+		listData.add(emptyVal);
+		listData.add(emptyVal);
+		listData.add(arrayRosette);
+		listData.add(arrayPosidex);
+		listData.add(arrayJaro);
+		listData.add(arrayLeven);
+		listData.add(arrayQratio);
+
+		return listData;
+
+	}
+
+	public List<String[]> setDataJaro(List<PythonJaroData> dataOrder, HashMap<Long, ColumnData> colDataMap,
+			String requestedName) {
+
+		String rosetteRow = printRowJaro(dataOrder, colDataMap, "ROSETTE");
+		String posidexRow = printRowJaro(dataOrder, colDataMap, "POSIDEX");
+		String jaroRow = printRowJaro(dataOrder, colDataMap, "JARO");
+		String levenRow = printRowJaro(dataOrder, colDataMap, "LEVENSHTEIN");
+		String qRationRow = printRowJaro(dataOrder, colDataMap, "QRATIO");
+		String setRatioRow = printRowJaro(dataOrder, colDataMap, "SETRATIO");
+		String sortRationRow = printRowJaro(dataOrder, colDataMap, "SORTRATIO");
+
+		// String fileName = requestedName;
+
+		requestedName = requestedName + ",";
+
+		posidexRow = "POSIDEX," + requestedName + posidexRow;
+		rosetteRow = "ROSETTE," + requestedName + rosetteRow;
+		jaroRow = "JARO," + requestedName + jaroRow;
+		levenRow = "LEVENSHTEIN," + requestedName + levenRow;
+		qRationRow = "QRATIO," + requestedName + qRationRow;
+		setRatioRow = "SETRATIO," + requestedName + setRatioRow;
+		sortRationRow = "SORTRATIO," + requestedName + sortRationRow;
+
+		String[] arrayRosette = rosetteRow.split(",");
+		String[] arrayPosidex = posidexRow.split(",");
+		String[] arrayJaro = jaroRow.split(",");
+		String[] arrayLeven = levenRow.split(",");
+		String[] arrayQratio = qRationRow.split(",");
+		// String[] arraySet = setRatioRow.split(",");
+		// String[] arraySort = sortRationRow.split(",");
+
+		String[] emptyVal = { "" };
+
+		List<String[]> listData = new ArrayList<>();
+		listData.add(emptyVal);
+		listData.add(emptyVal);
+		listData.add(arrayJaro);
+		listData.add(arrayRosette);
+		listData.add(arrayPosidex);
+		listData.add(arrayLeven);
+		listData.add(arrayQratio);
+
+		return listData;
+
+	}
+
+	public List<String[]> setDataLeven(List<PythonLevenData> dataOrder, HashMap<Long, ColumnData> colDataMap,
+			String requestedName) {
+
+		String rosetteRow = printRowLeven(dataOrder, colDataMap, "ROSETTE");
+		String posidexRow = printRowLeven(dataOrder, colDataMap, "POSIDEX");
+		String jaroRow = printRowLeven(dataOrder, colDataMap, "JARO");
+		String levenRow = printRowLeven(dataOrder, colDataMap, "LEVENSHTEIN");
+		String qRationRow = printRowLeven(dataOrder, colDataMap, "QRATIO");
+		String setRatioRow = printRowLeven(dataOrder, colDataMap, "SETRATIO");
+		String sortRationRow = printRowLeven(dataOrder, colDataMap, "SORTRATIO");
+
+		// String fileName = requestedName;
+
+		requestedName = requestedName + ",";
+
+		posidexRow = "POSIDEX," + requestedName + posidexRow;
+		rosetteRow = "ROSETTE," + requestedName + rosetteRow;
+		jaroRow = "JARO," + requestedName + jaroRow;
+		levenRow = "LEVENSHTEIN," + requestedName + levenRow;
+		qRationRow = "QRATIO," + requestedName + qRationRow;
+		setRatioRow = "SETRATIO," + requestedName + setRatioRow;
+		sortRationRow = "SORTRATIO," + requestedName + sortRationRow;
+
+		String[] arrayRosette = rosetteRow.split(",");
+		String[] arrayPosidex = posidexRow.split(",");
+		String[] arrayJaro = jaroRow.split(",");
+		String[] arrayLeven = levenRow.split(",");
+		String[] arrayQratio = qRationRow.split(",");
+		// String[] arraySet = setRatioRow.split(",");
+		// String[] arraySort = sortRationRow.split(",");
+
+		String[] emptyVal = { "" };
+
+		List<String[]> listData = new ArrayList<>();
+		listData.add(emptyVal);
+		listData.add(emptyVal);
+		listData.add(arrayLeven);
+		listData.add(arrayRosette);
+		listData.add(arrayPosidex);
+		listData.add(arrayJaro);
+		listData.add(arrayQratio);
+
+		return listData;
+
+	}
+
+	public List<String[]> setDataQratio(List<PythonQratioData> dataOrder, HashMap<Long, ColumnData> colDataMap,
+			String requestedName) {
+
+		String rosetteRow = printRowQratio(dataOrder, colDataMap, "ROSETTE");
+		String posidexRow = printRowQratio(dataOrder, colDataMap, "POSIDEX");
+		String jaroRow = printRowQratio(dataOrder, colDataMap, "JARO");
+		String levenRow = printRowQratio(dataOrder, colDataMap, "LEVENSHTEIN");
+		String qRationRow = printRowQratio(dataOrder, colDataMap, "QRATIO");
+		String setRatioRow = printRowQratio(dataOrder, colDataMap, "SETRATIO");
+		String sortRationRow = printRowQratio(dataOrder, colDataMap, "SORTRATIO");
+
+		// String fileName = requestedName;
+
+		requestedName = requestedName + ",";
+
+		posidexRow = "POSIDEX," + requestedName + posidexRow;
+		rosetteRow = "ROSETTE," + requestedName + rosetteRow;
+		jaroRow = "JARO," + requestedName + jaroRow;
+		levenRow = "LEVENSHTEIN," + requestedName + levenRow;
+		qRationRow = "QRATIO," + requestedName + qRationRow;
+		setRatioRow = "SETRATIO," + requestedName + setRatioRow;
+		sortRationRow = "SORTRATIO," + requestedName + sortRationRow;
+
+		String[] arrayRosette = rosetteRow.split(",");
+		String[] arrayPosidex = posidexRow.split(",");
+		String[] arrayJaro = jaroRow.split(",");
+		String[] arrayLeven = levenRow.split(",");
+		String[] arrayQratio = qRationRow.split(",");
+		// String[] arraySet = setRatioRow.split(",");
+		// String[] arraySort = sortRationRow.split(",");
+
+		String[] emptyVal = { "" };
+
+		List<String[]> listData = new ArrayList<>();
+		listData.add(emptyVal);
+		listData.add(emptyVal);
+		listData.add(arrayQratio);
+		listData.add(arrayRosette);
+		listData.add(arrayPosidex);
+		listData.add(arrayJaro);
+		listData.add(arrayLeven);
+
+		return listData;
+
+	}
+
+	private void storeDataIntoCSV(List<List<String[]>> listData, String requestedName) throws IOException {
+
+		/*
+		 * 
+		 * Calendar calendar = Calendar.getInstance(); Date today = calendar.getTime();
+		 * SimpleDateFormat sdf=new SimpleDateFormat("yyy-MM-dd hh:mm");
+		 * 
+		 * String date = sdf.format(today);
+		 */
+		// System.out.println("Current Time: " + "D:\\AML\\WorldCheckResponse "+date+"
+		// .csv");
+		Date date = new Date();
+		date.getMinutes();
+
+		String filePath = "D:\\ISC\\DATA5\\" + requestedName + ".csv";
+
+		File file = new File(filePath);
+		try {
+			// create FileWriter object with file as parameter
+			FileWriter outputfile = new FileWriter(file);
+
+			System.out.println("Final List Dtaa  -- " + listData);
+			try (CSVWriter writer = new CSVWriter(outputfile)) {
+				for (List<String[]> list : listData) {
+					writer.writeAll(list);
+				}
+
+			} finally {
+				outputfile.close();
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private String printRowPSX(List<PosidexData> dataOrderList, HashMap<Long, ColumnData> dataMap, String algoName) {
+		Boolean isFirst = true;
+		String dataStr = "";
+		for (PosidexData dr : dataOrderList) {
+			ColumnData cData = dataMap.get(dr.getUid());
+			Object o = cData.getData(algoName);
+			if (isFirst) {
+				isFirst = false;
+			} else {
+				dataStr += ",";
+			}
+			if (o != null) {
+				dataStr += o;
+			} else {
+				dataStr += getBlankData();
+			}
+
+		}
+
+		return dataStr;
+
+	}
+
+	private String printRowJaro(List<PythonJaroData> dataOrderList, HashMap<Long, ColumnData> dataMap,
+			String algoName) {
+		Boolean isFirst = true;
+		String dataStr = "";
+		for (PythonJaroData dr : dataOrderList) {
+			ColumnData cData = dataMap.get(dr.getUid());
+			Object o = cData.getData(algoName);
+			if (isFirst) {
+				isFirst = false;
+			} else {
+				dataStr += ",";
+			}
+			if (o != null) {
+				dataStr += o;
+			} else {
+				dataStr += getBlankData();
+			}
+
+		}
+
+		return dataStr;
+
+	}
+
+	private String printRowLeven(List<PythonLevenData> dataOrderList, HashMap<Long, ColumnData> dataMap,
+			String algoName) {
+		Boolean isFirst = true;
+		String dataStr = "";
+		for (PythonLevenData dr : dataOrderList) {
+			ColumnData cData = dataMap.get(dr.getUid());
+			Object o = cData.getData(algoName);
+			if (isFirst) {
+				isFirst = false;
+			} else {
+				dataStr += ",";
+			}
+			if (o != null) {
+				dataStr += o;
+			} else {
+				dataStr += getBlankData();
+			}
+
+		}
+
+		return dataStr;
+
+	}
+
+	private String printRowQratio(List<PythonQratioData> dataOrderList, HashMap<Long, ColumnData> dataMap,
+			String algoName) {
+		Boolean isFirst = true;
+		String dataStr = "";
+		for (PythonQratioData dr : dataOrderList) {
+			ColumnData cData = dataMap.get(dr.getUid());
+			Object o = cData.getData(algoName);
+			if (isFirst) {
+				isFirst = false;
+			} else {
+				dataStr += ",";
+			}
+			if (o != null) {
+				dataStr += o;
+			} else {
+				dataStr += getBlankData();
+			}
+
+		}
+
+		return dataStr;
+
+	}
+
+	private String printRow(List<DataRank> dataOrderList, HashMap<Long, ColumnData> dataMap, String algoName) {
+		Boolean isFirst = true;
+		String dataStr = "";
+		for (DataRank dr : dataOrderList) {
+			ColumnData cData = dataMap.get(dr.getUuid());
+			Object o = cData.getData(algoName);
+			if (isFirst) {
+				isFirst = false;
+			} else {
+				dataStr += ",";
+			}
+			if (o != null) {
+				dataStr += o;
+			} else {
+				dataStr += getBlankData();
+			}
+
+		}
+
+		return dataStr;
+
+	}
+	
+	private String printRowRosette(List<RosetteData> dataOrderList, HashMap<Long, ColumnData> dataMap, String algoName) {
+		Boolean isFirst = true;
+		String dataStr = "";
+		for (RosetteData dr : dataOrderList) {
+			ColumnData cData = dataMap.get(dr.getUid());
+			Object o = cData.getData(algoName);
+			if (isFirst) {
+				isFirst = false;
+			} else {
+				dataStr += ",";
+			}
+			if (o != null) {
+				dataStr += o;
+			} else {
+				dataStr += getBlankData();
+			}
+
+		}
+
+		return dataStr;
+
+	}
+
+	private String printRowDef(List<DataRank> dataOrderList, HashMap<Long, ColumnData> dataMap, String algoName) {
+		Boolean isFirst = true;
+		String dataStr = "";
+		for (DataRank dr : dataOrderList) {
+			ColumnData cData = dataMap.get(dr.getUuid());
+			Object o = cData.getData(algoName);
+			if (!isFirst) {
+				isFirst = false;
+			} else {
+				dataStr += ",";
+			}
+			if (o != null) {
+				dataStr += o + " ,";
+			}
+
+		}
+
+		return dataStr;
+
+	}
+
+	String getBlankData() {
+		return ",,";
+	}
+
+	// private List insertDataRank(ArrayList<DataRank> dataOrderList, DataRank
+	// dataRank){
+
+	// for()
+
+	// return dataOrderList;
+	// }
+
+	@Data
+	class DataRank {
+		Long uuid;
+		Float score;
+
+		DataRank(Long uuid, Float score) {
+			this.uuid = uuid;
+			this.score = score;
+		}
+	}
+
+	@Data
+	class ColumnData {
+		RosetteData rData;
+		PosidexData pData;
+		PythonJaroData pJaro;
+		PythonLevenData pLenen;
+		PythonQratioData pQr;
+		PythonSetRatioData pSr;
+		PythonSortRationData pSor;
+
+		MatchedData getData(String type) {
+			if (rData != null && type.equals(rData.getALOGNAME()))
+				return rData;
+			if (pData != null && type.equals(pData.getALOGNAME()))
+				return pData;
+			if (pJaro != null && type.equals(pJaro.getALOGNAME()))
+				return pJaro;
+			if (pLenen != null && type.equals(pLenen.getALOGNAME()))
+				return pLenen;
+			if (pQr != null && type.equals(pQr.getALOGNAME()))
+				return pQr;
+			if (pSr != null && type.equals(pSr.getALOGNAME()))
+				return pSr;
+			if (pSor != null && type.equals(pSor.getALOGNAME()))
+				return pSor;
+
+			return null;
+		}
+	}
+
+}

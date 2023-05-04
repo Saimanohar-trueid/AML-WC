@@ -1,0 +1,19 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+       dialect: org.hibernate.dialect.OracleDialect 
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521:xe
+    username: SYSTEM
+    password: system
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+     
+       
+       
+       
+      
+           
